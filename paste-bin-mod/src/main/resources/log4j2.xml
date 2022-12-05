@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout pattern="%style{%d}{yellow} [%style{PID => %pid}{BLUE}] %highlight{%-5level}{FATAL=reverse Bright red, ERROR=Bright red, WARN=yellow, INFO=green} [%style{Thread %threadId => %thread}{CYAN}] %style{%logger{30}}{Magenta} - %msg%n%rException{full}"/>
+        </Console>
+
+        <!--<Console name="LogInJSON" target="SYSTEM_OUT">
+            <JsonLayout complete="false" compact="false" properties="true">
+                <KeyValuePair key="testkey" value="test value" />
+            </JsonLayout>
+        </Console>-->
+    </Appenders>
+    <Loggers>
+        <Root level="debug">
+            <AppenderRef ref="ConsoleAppender"/>
+            <!--<AppenderRef ref="LogInJSON"/>-->
+        </Root>
+    </Loggers>
+</Configuration>
