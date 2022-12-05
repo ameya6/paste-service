@@ -1,0 +1,16 @@
+server:
+  port: 6006
+
+default:
+  expiryInSeconds: 7776000
+  domain: http://pasty.com/
+  dataLimit: 10000000000
+
+duid-server: http://localhost:9009/duid/
+
+database:
+  url: "jdbc:postgresql://192.168.0.107:26257/pastebin"
+  username: "root"
+  password: "root"
+  driver: "org.postgresql.Driver"
+  modelPackage: "org.data.model"
