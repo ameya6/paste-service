@@ -13,4 +13,7 @@ import org.springframework.stereotype.Service;
 public class PasteResponse {
     private String url;
     private String message;
+    private String preview;
+    private StringBuilder data;
+
 }

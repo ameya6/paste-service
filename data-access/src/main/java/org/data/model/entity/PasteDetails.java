@@ -24,7 +24,7 @@ public class PasteDetails {
 
     @Column(name = "preview_text")
     private String previewText;
-    private String data;
+    private StringBuilder data;
 
     @Column(name = "data_length")
     private Integer dataLength;
@@ -32,8 +32,7 @@ public class PasteDetails {
     @Column(name = "data_size")
     private String dataSize;
 
-    @Column(name = "short_code")
-    private String shortCode;
+
     private String domain;
     private String bucket;
     private String folder;
@@ -63,7 +62,6 @@ public class PasteDetails {
                 ", data='" + data + '\'' +
                 ", dataLength=" + dataLength +
                 ", dataSize='" + dataSize + '\'' +
-                ", shortCode='" + shortCode + '\'' +
                 ", domain='" + domain + '\'' +
                 ", bucket='" + bucket + '\'' +
                 ", folder='" + folder + '\'' +

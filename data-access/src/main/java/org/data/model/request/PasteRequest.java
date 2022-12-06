@@ -14,7 +14,7 @@ public class PasteRequest {
     private UUID userUUID;
     private Long expiryInSeconds;
     private String title;
-    private String data;
+    private StringBuilder data;
 
     public PasteRequest(){}
 }

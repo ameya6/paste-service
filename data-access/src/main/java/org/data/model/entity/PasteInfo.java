@@ -29,6 +29,8 @@ public class PasteInfo {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "short_code")
+    private String shortCode;
     @Column(name = "expiry_date")
     private LocalDateTime expiryDate;
 
@@ -49,6 +51,7 @@ public class PasteInfo {
                 ", createdAt=" + createdAt +
                 ", expiryDate=" + expiryDate +
                 ", expired=" + expired +
+                ", shortCode='" + shortCode + '\'' +
                 ", deleted=" + deleted +
                 ", pasteDetails=" + pasteDetails.getUuid() +
                 '}';

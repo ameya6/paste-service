@@ -67,10 +67,11 @@ public class PasteService {
 
             log.info(pasteInfo + " " + pasteDetails);
 
-            saveData(pasteDetails, pasteInfo.getUserUUID() + "/" + pasteInfo.getUuid(), pasteRequest.getData());
+            if(pasteDetails.isSaveToFile())
+                saveData(pasteInfo.getUserUUID() + "/" + pasteInfo.getUuid(), pasteRequest.getData());
             save(pasteDetails);
 
-            pasteResponse = pasteResponse(pasteDetails, "Successfully save paste");
+            pasteResponse = pasteResponse(domain + pasteInfo.getShortCode(), "Successfully save paste");
             return pasteResponse;
         } catch (Exception e) {
             log.error("Exception : " + e.getMessage(), e);
@@ -131,12 +132,13 @@ public class PasteService {
         return output.toString();
     }
 
-    private PasteInfo pasteInfo(PasteRequest pasteRequest) {
+    private PasteInfo pasteInfo(PasteRequest pasteRequest) throws Exception {
         Long expiryInSeconds = pasteRequest.getExpiryInSeconds() != null ? pasteRequest.getExpiryInSeconds() : defaultExpiryInSeconds;
         return PasteInfo.builder()
                 .createdAt(LocalDateTime.now())
                 .userId(pasteRequest.getUserId())
                 .userUUID(pasteRequest.getUserUUID())
+                .shortCode(base62(distributedUID()))
                 .uuid(UUID.randomUUID())
                 .expiryDate(LocalDateTime.now().plusSeconds(expiryInSeconds))
                 .build();
@@ -144,20 +146,18 @@ public class PasteService {
 
     private PasteDetails pasteDetails(PasteRequest pasteRequest) throws Exception {
         String title = pasteRequest.getTitle() != null ? pasteRequest.getTitle() : "Untitled";
-        int dataLength = pasteRequest.getData().getBytes(StandardCharsets.UTF_8).length;
+        int dataLength = pasteRequest.getData().toString().getBytes(StandardCharsets.UTF_8).length;
         boolean saveToFile = dataLength > dataStoreLimit ? true : false;
-        String data = !saveToFile ? pasteRequest.getData() : null;
+        StringBuilder data = !saveToFile ? pasteRequest.getData() : null;
         //String dataLocation = dataLength > dataLimit ? storeData(data) : null;
         UUID uuid = UUID.randomUUID();
 
         return PasteDetails.builder()
                 .title(title)
                 .uuid(uuid)
-                .shortCode(base62(distributedUID()))
                 .data(data)
                 .bucket(bucket)
                 .folder(pasteRequest.getUserUUID().toString())
-                .filename(uuid.toString())
                 .domain(domain)
                 .dataLength(dataLength)
                 .saveToFile(saveToFile)
@@ -166,23 +166,19 @@ public class PasteService {
                 .build();
     }
 
-    private void saveData(PasteDetails pasteDetails, String location, String data) throws Exception {
-        ObjectWriteResponse response = null;
-        response = storeData(location, data);
-        if(response != null) {
-            pasteDetails.setVersionId(response.versionId());
-            pasteDetails.setEtag(response.etag());
-            pasteDetails.setRegion(response.region());
-        }
+    private void saveData(String location, StringBuilder data) throws Exception {
+        storeData(location, data);
     }
 
-    public ObjectWriteResponse storeData(String location, String data) throws Exception {
-        return minioService.save(location, data);
+    public void storeData(String location, StringBuilder data) throws Exception {
+        minioService.save(location, data)
+                .doOnError(error -> log.info(error))
+                .subscribe();
     }
 
-    private PasteResponse pasteResponse(PasteDetails pasteDetails, String message) {
+    private PasteResponse pasteResponse(String url, String message) {
         return PasteResponse.builder()
-                .url(pasteDetails.getDomain() + pasteDetails.getShortCode())
+                .url(url)
                 .message(message)
                 .build();
     }
