@@ -1,6 +1,7 @@
 package org.paste.service;
 
 import com.google.gson.Gson;
+import io.minio.ObjectWriteResponse;
 import lombok.extern.log4j.Log4j2;
 import org.data.model.entity.PasteDetails;
 import org.data.model.entity.PasteInfo;
@@ -32,11 +33,17 @@ public class PasteService {
     @Value("${default.domain}")
     private String domain;
 
+    @Value("${default.bucket}")
+    private String bucket;
+
     @Value("${default.dataLimit}")
     private Long dataLimit;
 
     @Value("${duid-server}")
     private String duidServer;
+
+    @Value("${default.dataStoreLimit}")
+    private Integer dataStoreLimit;
 
     @Autowired
     private Gson gson;
@@ -44,11 +51,13 @@ public class PasteService {
     @Autowired
     private PasteDao pasteDao;
 
+    @Autowired
+    private MinioService minioService;
+
     private final String charMap = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     public PasteResponse pasteProcess(PasteRequest pasteRequest) {
-        log.info(pasteRequest);
-        PasteResponse pasteResponse = PasteResponse.builder().build();
+        PasteResponse pasteResponse = null;
         try {
             PasteInfo pasteInfo = pasteInfo(pasteRequest);
             PasteDetails pasteDetails = pasteDetails(pasteRequest);
@@ -56,17 +65,16 @@ public class PasteService {
             pasteInfo.setPasteDetails(pasteDetails);
             pasteDetails.setPasteInfo(pasteInfo);
 
-            pasteResponse.setUrl(pasteDetails.getDomain() + pasteDetails.getShortCode());
-            pasteResponse.setMessage("Paste saved successfully");
+            log.info(pasteInfo + " " + pasteDetails);
 
+            saveData(pasteDetails, pasteInfo.getUserUUID() + "/" + pasteInfo.getUuid(), pasteRequest.getData());
             save(pasteDetails);
 
-            log.info(pasteInfo + " " + pasteDetails);
+            pasteResponse = pasteResponse(pasteDetails, "Successfully save paste");
             return pasteResponse;
         } catch (Exception e) {
             log.error("Exception : " + e.getMessage(), e);
-            pasteResponse.setMessage("Failed to create paste");
-            return pasteResponse;
+            return PasteResponse.builder().message("Failed to create paste").build();
         } finally {
             // event log
         }
@@ -82,7 +90,7 @@ public class PasteService {
         else if(length >= 1000 && length < 1_000_000)
             return length / 1000 + " KB";
         else if(length >= 1_000_000 && length < dataLimit)
-            return length / 1000 + " MB";
+            return Math.round((double)length / 1_000_000) + " MB";
         else
             return "";
     }
@@ -136,18 +144,46 @@ public class PasteService {
 
     private PasteDetails pasteDetails(PasteRequest pasteRequest) throws Exception {
         String title = pasteRequest.getTitle() != null ? pasteRequest.getTitle() : "Untitled";
-        String data = pasteRequest.getData();
-        int dataLength = data.getBytes(StandardCharsets.UTF_8).length;
+        int dataLength = pasteRequest.getData().getBytes(StandardCharsets.UTF_8).length;
+        boolean saveToFile = dataLength > dataStoreLimit ? true : false;
+        String data = !saveToFile ? pasteRequest.getData() : null;
+        //String dataLocation = dataLength > dataLimit ? storeData(data) : null;
+        UUID uuid = UUID.randomUUID();
 
         return PasteDetails.builder()
                 .title(title)
-                .uuid(UUID.randomUUID())
+                .uuid(uuid)
                 .shortCode(base62(distributedUID()))
-                .data()
+                .data(data)
+                .bucket(bucket)
+                .folder(pasteRequest.getUserUUID().toString())
+                .filename(uuid.toString())
                 .domain(domain)
                 .dataLength(dataLength)
+                .saveToFile(saveToFile)
                 .dataSize(dataSize(dataLength))
                 .previewText(pasteRequest.getData().substring(0, 20) + "...")
+                .build();
+    }
+
+    private void saveData(PasteDetails pasteDetails, String location, String data) throws Exception {
+        ObjectWriteResponse response = null;
+        response = storeData(location, data);
+        if(response != null) {
+            pasteDetails.setVersionId(response.versionId());
+            pasteDetails.setEtag(response.etag());
+            pasteDetails.setRegion(response.region());
+        }
+    }
+
+    public ObjectWriteResponse storeData(String location, String data) throws Exception {
+        return minioService.save(location, data);
+    }
+
+    private PasteResponse pasteResponse(PasteDetails pasteDetails, String message) {
+        return PasteResponse.builder()
+                .url(pasteDetails.getDomain() + pasteDetails.getShortCode())
+                .message(message)
                 .build();
     }
 }

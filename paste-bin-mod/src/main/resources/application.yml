@@ -5,6 +5,8 @@ default:
   expiryInSeconds: 7776000
   domain: http://pasty.com/
   dataLimit: 10000000000
+  bucket: pastes
+  dataStoreLimit: 300000
 
 duid-server: http://localhost:9009/duid/
 
@@ -14,3 +16,7 @@ database:
   password: "root"
   driver: "org.postgresql.Driver"
   modelPackage: "org.data.model"
+
+cache:
+  url: "192.168.0.107"
+  port: 6399

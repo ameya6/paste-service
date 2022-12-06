@@ -26,9 +26,6 @@ public class PasteDetails {
     private String previewText;
     private String data;
 
-    @Column(name = "data_location")
-    private String dataLocation;
-
     @Column(name = "data_length")
     private Integer dataLength;
 
@@ -38,6 +35,18 @@ public class PasteDetails {
     @Column(name = "short_code")
     private String shortCode;
     private String domain;
+    private String bucket;
+    private String folder;
+    private String filename;
+
+    @Column(name = "save_to_file")
+    private boolean saveToFile;
+
+    @Column(name = "version_id")
+    private String versionId;
+    private String etag;
+    private String region;
+
 
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -47,15 +56,19 @@ public class PasteDetails {
     @Override
     public String toString() {
         return "PasteDetails{" +
-                "title='" + title + '\'' +
+                "id=" + id +
+                ", uuid=" + uuid +
+                ", title='" + title + '\'' +
                 ", previewText='" + previewText + '\'' +
                 ", data='" + data + '\'' +
-                ", dataLocation='" + dataLocation + '\'' +
-                ", dataSize=" + dataSize +
                 ", dataLength=" + dataLength +
+                ", dataSize='" + dataSize + '\'' +
                 ", shortCode='" + shortCode + '\'' +
                 ", domain='" + domain + '\'' +
+                ", bucket='" + bucket + '\'' +
+                ", folder='" + folder + '\'' +
                 ", pasteInfo='" + pasteInfo.getUuid() + '\'' +
+                ", filename='" + filename + '\'' +
                 '}';
     }
 
