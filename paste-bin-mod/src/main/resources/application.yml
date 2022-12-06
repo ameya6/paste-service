@@ -6,7 +6,7 @@ default:
   domain: http://pasty.com/
   dataLimit: 10000000000
   bucket: pastes
-  dataStoreLimit: 300000
+  dataStoreLimit: 100000
 
 duid-server: http://localhost:9009/duid/
 
