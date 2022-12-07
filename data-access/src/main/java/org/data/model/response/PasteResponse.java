@@ -16,4 +16,5 @@ public class PasteResponse {
     private String preview;
     private StringBuilder data;
 
+    public PasteResponse() {}
 }
